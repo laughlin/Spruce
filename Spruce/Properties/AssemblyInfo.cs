@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Spruce")]
 [assembly: AssemblyDescription("Set of extension methods representing a lightweight orm and a migration framework, for use with Dapper")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Bia Creations")]
+[assembly: AssemblyCompany("Laughlin Constable")]
 [assembly: AssemblyProduct("Spruce")]
-[assembly: AssemblyCopyright("Copyright ©  Bia Creations")]
+[assembly: AssemblyCopyright("Copyright ©")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0")]
+[assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyFileVersion("1.0.0")]

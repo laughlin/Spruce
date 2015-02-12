@@ -1,7 +1,7 @@
 Spruce
 ===========
 
-Set of extension methods representing a lightweight orm and a migration framework, for use with Dapper.  This is a .net 4.5 library designed to work with MS SQL Server 2008+. This library can be installed via [nuget](https://nuget.org/packages/spruce).
+Set of extension methods representing a lightweight orm and a migration framework, for use with Dapper.  This is a .net 4.5 library designed to work with MS SQL Server 2008+. A public version of this library can be installed via [nuget](https://nuget.org/packages/spruce).
 
 Conventions
 -----------
@@ -11,7 +11,7 @@ Conventions
 
 Example usage
 -----------------
-* Real world, example usage can be found in the [MvcKickstart project](https://github.com/jgeurts/MvcKickstart).
+* Real world, example usage can be found in the [MvcKickstart project](https://github.com/laughlin/MvcKickstart).
 
 
 Advanced configuration options
@@ -62,7 +62,7 @@ SpruceSettings.Saved += (item, e) =>
 
 ### How do I change a sql data type used when creating tables/columns?
 
-> SQL types are defined in [SpruceSettings.cs](https://github.com/jgeurts/spruce/blob/1a51840b7a2e35cf45107e04f68908a9eb76af65/Spruce/SpruceSettings.cs#L27-L39). Look near the bottom for the SqlSchemaTypeMap field.  You may add or update the map as needed:
+> SQL types are defined in [SpruceSettings.cs](https://github.com/laughlin/Spruce/blob/master/Spruce/SpruceSettings.cs#L27-L39). Look near the bottom for the SqlSchemaTypeMap field.  You may add or update the map as needed:
 ```cscharp
 // Somewhere in your application configuration
 SpruceSettings.SqlSchemaTypeMap[typeof(TimeSpan)] = "long";
