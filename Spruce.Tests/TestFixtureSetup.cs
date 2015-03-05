@@ -15,10 +15,12 @@ namespace Spruce.Tests
 		{
 			MiniProfiler.Settings.ProfilerProvider = new SingletonProfilerProvider();
 			MiniProfiler.Start();
-			ObjectFactory.Initialize(x => x.AddRegistry(new IocRegistry()));
+
+            //ObjectFactory.Initialize(x => x.AddRegistry(new IocRegistry()));
+            var container = new Container(new IocRegistry());
 
 			// Start with a fresh, empty db
-			var db = ObjectFactory.GetInstance<IDbConnection>();
+            var db = container.GetInstance<IDbConnection>();
 			db.DropAllScriptedObjects();
 			db.DropAllTables();
 		}
