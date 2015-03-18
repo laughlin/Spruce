@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using NUnit.Framework;
-using Should;
 using Should.Fluent;
 using Spruce.Schema;
 using Spruce.Schema.Attributes;
@@ -73,19 +70,12 @@ namespace Spruce.Tests
 			getItem.Should().Not.Be.Null();
 			getItem.NewName.Should().Equal(item.NewName);
 
-		    var profiler = MiniProfiler.Current;
-            profiler.Root.CustomTimings.Count.ShouldBeGreaterThan(0);
-		    List<CustomTiming> sqlTimings;
-		    var success = profiler.Root.CustomTimings.TryGetValue("sql", out sqlTimings);
-            success.ShouldBeTrue();
-		    if (success)
-            {
-                sqlTimings.Count.ShouldBeGreaterThan(0);
-                foreach (var time in sqlTimings)
-                {
-                    time.CommandString.Should().Not.Contain(string.Format("select top 1 * from [{0}]", Db.GetTableName<ClassWithQueryExplicit>()));
-                }
-		    }   
+			MiniProfiler.Current.HasSqlTimings.Should().Be.True();
+			var timings = MiniProfiler.Current.GetSqlTimings();
+			foreach (var timing in timings)
+			{
+				timing.CommandString.Should().Not.Contain(string.Format("select top 1 * from [{0}]", Db.GetTableName<ClassWithQueryExplicit>()));
+			}
 		}
 
 		[Table("ClassWithColumnNames")]

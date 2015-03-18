@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using NUnit.Framework;
-using Spruce.Tests.Infrastructure;
 using StructureMap;
 
 namespace Spruce.Tests
@@ -12,8 +11,7 @@ namespace Spruce.Tests
 		[TestFixtureSetUp]
 		public virtual void SetupFixture()
 		{
-            var container = new Container(new IocRegistry());
-            Db = container.GetInstance<IDbConnection>();
+			Db = ObjectFactory.GetInstance<IDbConnection>();
 		}
 		[TestFixtureTearDown]
 		public virtual void TearDownFixture()
