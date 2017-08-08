@@ -1,16 +1,16 @@
 ﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
-		<id>Spruce</id>
+		<id>My.Spruce</id>
 		<version>1.0.0</version>
-		<authors>Jim Geurts</authors>
+		<authors>Jim Geurts, Justin Geiger, Jon Wynveen, Jon Knopp, Steve Fox</authors>
 		<projectUrl>https://github.com/laughlin/spruce</projectUrl>
 		<licenseUrl>https://raw.github.com/laughlin/spruce/master/LICENSE.txt</licenseUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>Set of extension methods representing a lightweight orm and a migration framework, for use with Dapper.</description>
 		<summary>Set of extension methods representing a lightweight orm and a migration framework, for use with Dapper.</summary>
 		<language>en-US</language>
-		<tags>dapper sql orm migration migrations extension crud</tags>
+		<tags>dapper my.sql orm migration migrations extension crud</tags>
 		<dependencies>
       <dependency id="Dapper" version="1.12" />
 		</dependencies>
