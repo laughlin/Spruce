@@ -27,12 +27,12 @@ namespace My.Spruce
 		public static IDictionary<Type, string> SqlSchemaTypeMap = new Dictionary<Type, string>
 			{
 				{ typeof(string), "nvarchar({0})" },
-				{ typeof(bool), "bit" },
-				{ typeof(int), "int" },
-				{ typeof(long), "bigint" },
+				{ typeof(bool), "TINYINT(1)" },
+				{ typeof(int), "INT" },
+				{ typeof(long), "BIGINT" },
 				{ typeof(double), "double" },
 				{ typeof(decimal), "decimal(18,6)" },
-				{ typeof(Guid), "uniqueidentifier" },
+				{ typeof(Guid), "varchar(64)" },
 				{ typeof(DateTime), "DATETIME2(7)" },
 				{ typeof(TimeSpan), "time" },
 				{ typeof(Enum), "int" },
