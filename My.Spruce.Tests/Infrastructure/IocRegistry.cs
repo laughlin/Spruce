@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Configuration;
 using System.Data;
-using System.Data.SqlClient;
+using MySql.Data.MySqlClient;
 using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
 using StructureMap;
@@ -23,13 +23,16 @@ namespace My.Spruce.Tests.Infrastructure
 			if (ConfigurationManager.ConnectionStrings[Environment.MachineName] != null)
 				connectionString = Environment.MachineName;
 
-			For<SqlConnection>().Use(() => new SqlConnection(ConfigurationManager.ConnectionStrings[connectionString].ConnectionString));
+            For<MySqlConnection>().Use(() =>
+			{
+			    return new MySqlConnection(ConfigurationManager.ConnectionStrings[connectionString].ConnectionString);
+			});
 
 			For<IDbConnection>()
 				.LifecycleIs(new StructureMap.Pipeline.ThreadLocalStorageLifecycle())
 				.Use(() =>
 					{
-						var connection = ObjectFactory.GetInstance<SqlConnection>();
+                        var connection = ObjectFactory.GetInstance<MySqlConnection>();
 						connection.Open();
 						return new ProfiledDbConnection(connection, MiniProfiler.Current);						
 					})
