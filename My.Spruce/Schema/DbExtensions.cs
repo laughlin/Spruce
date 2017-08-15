@@ -23,6 +23,7 @@ namespace My.Spruce.Schema
 
 		/// <summary>
 		/// Check if the specified table exists
+		/// Converted to MySql Format
 		/// </summary>
 		/// <param name="db">Database Connection</param>
 		/// <param name="name">Name of the table</param>
@@ -45,12 +46,12 @@ namespace My.Spruce.Schema
 				}
 			}
 
-			var builder = new StringBuilder("select 1 from INFORMATION_SCHEMA.TABLES where ");
+			var builder = new StringBuilder("select * from INFORMATION_SCHEMA.TABLES where ");
 			if (!String.IsNullOrEmpty(schemaName))
 				builder.Append("TABLE_SCHEMA = @schemaName AND ");
-			builder.Append("TABLE_NAME = @name");
+			builder.Append("TABLE_NAME = @name LIMIT 1;");
 
-			return db.Query(builder.ToString(), new { schemaName, name }, transaction: transaction).Count() == 1;
+            return db.Query(builder.ToString(), new { schemaName, name }, transaction: transaction).Count() == 1;
 		}
 
 		/// <summary>
@@ -63,80 +64,77 @@ namespace My.Spruce.Schema
 			db.CreateTable(typeof(T));
 		}
 
-		/// <summary>
-		/// Creates the sql table for the specified type
-		/// </summary>
-		/// <param name="db">Database Connection</param>
-		/// <param name="type">Type representing the table to create</param>
-		public static void CreateTable(this IDbConnection db, Type type)
-		{
-			var tableName = db.GetTableName(type);
+	    /// <summary>
+	    /// Creates the sql table for the specified type
+	    /// </summary>
+	    /// <param name="db">Database Connection</param>
+	    /// <param name="type">Type representing the table to create</param>
+	    public static void CreateTable(this IDbConnection db, Type type)
+	    {
+	        string tableName = db.GetTableName(type);
 
-			var text = new StringBuilder();
-			var constraints = new StringBuilder();
-			text.Append("IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[");
-			text.Append(tableName);
-			text.AppendLine("]') AND type in (N'U')) BEGIN");
-			text.Append("CREATE TABLE [");
-			text.Append(tableName);
-			text.AppendLine("] (");
+	        StringBuilder text = new StringBuilder();
 
-			var columns = db.GetColumns(type);
-			var columnIndex = 0;
-			foreach (var column in columns)
-			{
-				var isFirst = columnIndex++ == 0;
-				if (!isFirst)
-				{
-					text.AppendLine(",");
-				}
+	        StringBuilder constraints = new StringBuilder();
 
-				text.AppendFormat("\"{0}\" {1}", column.Name, column.SqlType);
-				if (column.IsPrimary)
-				{
-					text.Append(" PRIMARY KEY");
-					if (column.AutoIncrement)
-					{
-						text.Append(" IDENTITY");
-					}
-				}
-				else
-				{
-					if (column.IsNullable)
-					{
-						text.Append(" NULL");
-					}
-					else
-					{
-						text.Append(" NOT NULL");
-					}
-				}
-				if (!string.IsNullOrEmpty(column.DefaultValue))
-				{
-					text.AppendFormat(" DEFAULT ({0})", column.DefaultValue);
-				}
+	        text.AppendLine(string.Format("CREATE TABLE IF NOT EXISTS `{0}` (", tableName));
 
-				if (column.HasForeignKey && column.GenerateForeignKey)
-				{
-					constraints.Append(", CONSTRAINT \"");
-					constraints.Append(column.ForeignKeyName);
-					constraints.Append("\" FOREIGN KEY (\"");
-					constraints.Append(column.Name);
-					constraints.Append("\") REFERENCES \"");
-					constraints.Append(column.ReferencedTableName);
-					constraints.AppendLine("\" (\"Id\")");
-				}
-			}
-			if (constraints.Length > 0)
-				text.Append(constraints);
+	        var columns = db.GetColumns(type);
+	        var columnIndex = 0;
+	        foreach (var column in columns)
+	        {
+	            var isFirst = columnIndex++ == 0;
+	            if (!isFirst)
+	            {
+	                text.AppendLine(",");
+	            }
 
-			text.AppendLine(");");
-			text.AppendLine("END;");
+	            text.AppendFormat("`{0}` {1}", column.Name, column.SqlType);
+	            if (column.IsPrimary)
+	            {
+	                text.Append(" PRIMARY KEY"); //not sure bout this one if its ok here or not
+	                if (column.AutoIncrement)
+	                {
+	                    text.Append(" AUTO_INCREMENT");
+	                }
+	            }
+	            else
+	            {
+	                if (column.IsNullable)
+	                {
+	                    text.Append(" NULL");
+	                }
+	                else
+	                {
+	                    text.Append(" NOT NULL");
+	                }
+	            }
+	            if (!string.IsNullOrEmpty(column.DefaultValue))
+	            {
+	                text.AppendFormat(" DEFAULT ({0})", column.DefaultValue);
+	            }
 
-			db.Execute(text.ToString());
-		}
+	            if (column.HasForeignKey && column.GenerateForeignKey)
+	            {
+	                constraints.Append(", CONSTRAINT \"");
+	                constraints.Append(column.ForeignKeyName);
+	                constraints.Append("\" FOREIGN KEY (\"");
+	                constraints.Append(column.Name);
+	                constraints.Append("\") REFERENCES \"");
+	                constraints.Append(column.ReferencedTableName);
+	                constraints.AppendLine("\" (\"Id\")");
+	            }
+	        }
+	        if (constraints.Length > 0)
+	            text.Append(constraints);
 
-		/// <summary>
+	        text.AppendLine(");");
+//		        text.AppendLine("END;");
+
+	        db.Execute(text.ToString());
+	    }
+
+	    /// <summary>
 		/// Drops the specified table
 		/// </summary>
 		/// <typeparam name="T">Type representing the table to drop</typeparam>
@@ -152,7 +150,11 @@ namespace My.Spruce.Schema
 		/// <param name="name">Name fo the table to drop</param>
 		public static void DropTable(this IDbConnection db, string name)
 		{
-			db.Execute("IF EXISTS(SELECT 1 FROM sys.objects WHERE OBJECT_ID = OBJECT_ID(N'{0}') AND type = (N'U')) DROP TABLE [{0}]".Fmt(name));
+		    if (db.TableExists(name))
+		    {
+		        db.Execute(string.Format("DROP TABLE {0}", name));
+		    }
+//			db.Execute("IF EXISTS(SELECT 1 FROM sys.objects WHERE OBJECT_ID = OBJECT_ID(N'{0}') AND type = (N'U')) DROP TABLE [{0}]".Fmt(name));
 		}
 		/// <summary>
 		/// Drops all tables
@@ -235,8 +237,7 @@ PRINT 'All done'");
 				return;
 
 			db.Execute(@"
-IF EXISTS(select * from INFORMATION_SCHEMA.TABLES where TABLE_NAME=@OldTableName)
-	EXEC SP_RENAME @OldTableName, @NewTableName", new
+	RENAME TABLE @OldTableName TO @NewTableName", new
 				{
 					oldTableName,
 					newTableName
@@ -364,10 +365,15 @@ IF EXISTS(select * from INFORMATION_SCHEMA.TABLES where TABLE_NAME=@OldTableName
 				throw new Exception("Unable to find column definition for '{0}' in table '{1}'".Fmt(member.Member.Name, table));
 
 
-			var sql = @"
-				IF NOT EXISTS(select * from sys.columns where Name = N'{0}' and Object_ID = Object_ID(N'{1}'))
-				BEGIN
-					ALTER TABLE [{1}] ADD [{0}] {2}".Fmt(column.Name, table, column.SqlType);
+		    var columnExists = ColumnExists(db, column, table);
+		    if(columnExists)
+		    {
+		        //Column already exists 
+		        return;
+		    }
+
+
+			var sql = @"ALTER TABLE {1} ADD {0} {2}".Fmt(column.Name, table, column.SqlType);
 
 			if (defaultValue == null)
 			{
@@ -392,7 +398,26 @@ IF EXISTS(select * from INFORMATION_SCHEMA.TABLES where TABLE_NAME=@OldTableName
 
 			db.Execute(sql);
 		}
-		/// <summary>
+
+	    private static bool ColumnExists(IDbConnection db, Column column, string table)
+	    {
+	        string checkIfColumnExistsQuery = string.Format(@"
+                SELECT 
+		            IF(count(*) = 1, 'Exist','Not Exist') AS result
+		        FROM
+		            information_schema.columns
+		        WHERE
+		            -- table_schema = 'sywplatform-minimized'
+		            -- AND
+                        table_name = '{1}'
+		                AND column_name = '{0}'", column.Name, table);
+	        IEnumerable<int> results = db.Query<int>(checkIfColumnExistsQuery);
+
+	        bool columnExists = results.FirstOrDefault() > 0;
+	        return columnExists;
+	    }
+
+	    /// <summary>
 		/// Generate and execute ALTER SQL needed to rename a column
 		/// </summary>
 		/// <typeparam name="T">Type representing the table to rename column from</typeparam>
@@ -401,17 +426,21 @@ IF EXISTS(select * from INFORMATION_SCHEMA.TABLES where TABLE_NAME=@OldTableName
 		/// <param name="expression">Property of new column</param>
 		public static void RenameColumn<T>(this IDbConnection db, string oldColumnName, Expression<Func<T, object>> expression)
 		{
-			var member = GetMemberInfo(expression);
-			if (member == null)
-				return;
-			var table = db.GetTableName<T>();
-			var newColumnName = member.Member.Name;
+			MemberExpression member = GetMemberInfo(expression);
+		    if (member == null)
+		    {
+		        return;
+		    }
 
-			// SP_RENAME handles foreign key transfer
-			db.Execute(String.Format(@"
-					IF EXISTS(select * from sys.columns where Name = N'{1}' and Object_ID = Object_ID(N'{0}')) 
-					AND NOT EXISTS(select * from sys.columns where Name = N'{2}' and Object_ID = Object_ID(N'{0}'))
-						EXEC SP_RENAME '{0}.{1}', '{2}', 'COLUMN'", table, oldColumnName, newColumnName));
+		    string table = db.GetTableName<T>();
+			string newColumnName = member.Member.Name;
+		    var column = db.GetColumns<T>().SingleOrDefault(x => x.Name == member.Member.Name);
+		    if (column != null)
+		    {
+		        //Let it error out if it shouldn't happen.
+		        db.Execute(string.Format(@"ALTER TABLE '{0} CHANGE COLUMN {1} {2} {3};", table, oldColumnName, newColumnName,
+		            column.Type));
+		    }
 		}
 		/// <summary>
 		/// Generate and execute ALTER SQL needed to drop a column from a table
@@ -527,8 +556,7 @@ COMMIT TRANSACTION;".Fmt(table, columnName);
 		public static void DropForeignKey(this IDbConnection db, string table, string foreignKeyName)
 		{
 			db.Execute(String.Format(@"
-				IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'{0}') AND parent_object_id = OBJECT_ID(N'{1}'))
-					ALTER TABLE [{1}] DROP CONSTRAINT [{0}]", foreignKeyName, table));
+				ALTER TABLE [{1}] DROP CONSTRAINT [{0}]", foreignKeyName, table));
 		}
 
 		#endregion
@@ -549,9 +577,10 @@ COMMIT TRANSACTION;".Fmt(table, columnName);
 		/// <param name="view">Name of view to be refreshed</param>
 		public static void RefreshView(this IDbConnection db, string view)
 		{
-			db.Execute(String.Format(@"
-				IF EXISTS(select * from sys.views where Name = N'{0}')
-					EXEC SP_REFRESHVIEW '{0}'", view));
+		    throw new NotSupportedException("This operation: RefreshView is not supported in MySQL at this time");
+//			db.Execute(String.Format(@"
+//				IF EXISTS(select * from sys.views where Name = N'{0}')
+//					EXEC SP_REFRESHVIEW '{0}'", view));
 		}
 		/// <summary>
 		/// Drop and create the specified view
@@ -601,63 +630,29 @@ COMMIT TRANSACTION;".Fmt(table, columnName);
 		{
 			db.Execute(
 @"
-PRINT 'dropping all procedures...'
- 
- --PROCEDURES
- declare @procName varchar(500)
-declare cur cursor
-    for select [name] from sys.objects where type = 'p'
-open cur
+-- PRINT 'dropping all procedures...'
+-- https://stackoverflow.com/questions/3027832/drop-all-stored-procedures-in-mysql-or-using-temporary-stored-procedures
+delete from mysql.proc WHERE db LIKE 'sywplatform-minimized';
 
-fetch next from cur into @procName
-      while @@fetch_status = 0
-      begin
-            if @procName <> 'DeleteAllProcedures'
-                  exec('drop procedure ' + @procName)
-                  fetch next from cur into @procName
-      end
+-- PRINT 'all procedures dropped.'
+-- PRINT 'dropping all views...'
 
-close cur
-deallocate cur
+-- VIEWS
+SET @views = NULL;
+SELECT GROUP_CONCAT(table_schema, '.', table_name) INTO @views
+ FROM information_schema.views
+ WHERE table_schema = 'sywplatform-minimized'; -- @database_name; -- Your DB name here 
 
-PRINT 'all procedures dropped.'
-PRINT 'dropping all views...'
+SET @views = IFNULL(CONCAT('DROP VIEW ', @views), 'SELECT ""No Views""');
 
---VIEWS
-declare cur cursor
-    for select [name] from sys.objects where type = 'v'
-open cur
+PREPARE stmt FROM @views;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
-fetch next from cur into @procName
-      while @@fetch_status = 0
-      begin
-                  exec('drop view ' + @procName)
-                  fetch next from cur into @procName
-      end
-close cur
-deallocate cur
+-- PRINT 'all views dropped.'
 
-PRINT 'all views dropped.'
-PRINT 'dropping all functions...'
-
---FUNCTIONS
-declare cur cursor
-    for select [name] from sys.objects where type in (N'FN', N'IF', N'TF', N'FS', N'FT')
-open cur
-
-fetch next from cur into @procName
-      while @@fetch_status = 0
-      begin
-                  exec('drop function ' + @procName)
-                  fetch next from cur into @procName
-      end
-
-close cur
-deallocate cur
-
-PRINT 'all functions dropped.'
-
-PRINT 'All done'");
+-- PRINT 'All done'
+            ");
 		}
 		#endregion
 
